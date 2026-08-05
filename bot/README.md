@@ -78,7 +78,7 @@ npm start
 | Command | Description |
 |---------|-------------|
 | `/ping` | Replies with "Pong!" + latency and uptime |
-| `/apteem` | Sends the Apteem greeting |
+| `/uptime` | Shows how long the bot has been running |
 
 ---
 

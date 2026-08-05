@@ -50,7 +50,7 @@ function get(name) {
 function loadAll() {
   const commandFiles = [
     require("./ping"),
-    require("./apteem"),
+    require("./uptime"),
   ];
 
   for (const cmd of commandFiles) {

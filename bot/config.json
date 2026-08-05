@@ -31,9 +31,8 @@
     "adminUIDs": []
   },
 
-  "apteem": {
-    "message": "Apteem! ⚡",
-    "description": "Sends the apteem greeting"
+  "uptime": {
+    "description": "Shows how long the bot has been running"
   },
 
   "ping": {
