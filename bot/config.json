@@ -1,0 +1,43 @@
+{
+  "bot": {
+    "name": "thor",
+    "prefix": "/",
+    "version": "1.0.0",
+    "language": "en"
+  },
+
+  "credentials": {
+    "email": "",
+    "password": "",
+    "appStatePath": "./session/appstate.json"
+  },
+
+  "api": {
+    "listenEvents": true,
+    "selfListen": false,
+    "logLevel": "silent",
+    "updatePresence": false,
+    "forceLogin": false,
+    "userAgent": "Mozilla/5.0 (Linux; Android 9; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Mobile Safari/537.36",
+    "autoMarkDelivery": false,
+    "autoMarkRead": false
+  },
+
+  "behavior": {
+    "autoReconnect": true,
+    "reconnectDelay": 5000,
+    "maxReconnectAttempts": 10,
+    "commandCooldown": 1000,
+    "adminUIDs": []
+  },
+
+  "apteem": {
+    "message": "Apteem! ⚡",
+    "description": "Sends the apteem greeting"
+  },
+
+  "ping": {
+    "message": "🏓 Pong! Bot is alive.",
+    "description": "Check if the bot is online"
+  }
+}

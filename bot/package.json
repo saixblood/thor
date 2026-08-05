@@ -1,0 +1,17 @@
+{
+  "name": "thor-bot",
+  "version": "1.0.0",
+  "description": "Thor - Facebook Messenger Group Bot powered by nfxfca",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "nfxfca": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

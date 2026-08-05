@@ -1,0 +1,4 @@
+node_modules/
+session/appstate.json
+*.log
+.env
