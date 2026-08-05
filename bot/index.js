@@ -5,12 +5,13 @@
  * Entry point: initialises login, loads commands, and starts the listener.
  */
 
-const config   = require("./config.json");
-const logger   = require("./src/utils/logger");
-const commands = require("./src/commands/index");
+const config          = require("./config.json");
+const logger          = require("./src/utils/logger");
+const commands        = require("./src/commands/index");
 const { authenticate, saveAppState } = require("./src/core/login");
 const { attachListener }             = require("./src/core/handler");
 const { listBotAdmins }              = require("./src/utils/permissions");
+const SessionKeeper                  = require("./src/core/sessionKeeper");
 
 // ─── Banner ───────────────────────────────────────────────────────────────────
 
@@ -28,27 +29,25 @@ commands.loadAll();
 // ─── Reconnect Logic ─────────────────────────────────────────────────────────
 
 let reconnectCount = 0;
+let activeSessionKeeper = null;
 
 /**
- * Start the bot: authenticate and attach the listener.
+ * Start the bot: authenticate, start SessionKeeper, and attach the listener.
  * On failure the bot will retry up to maxReconnectAttempts times.
  */
 async function start() {
   try {
     const { api } = await authenticate();
+    reconnectCount = 0;
 
-    // Periodically re-save the appstate to keep the session fresh
-    const appStateRefresh = setInterval(() => {
-      if (api.getAppState) {
-        saveAppState(api.getAppState());
-        logger.debug("[main] Appstate refreshed.");
-      }
-    }, 30 * 60 * 1000); // every 30 minutes
+    // ── Session Keeper ────────────────────────────────────────────────────────
+    if (activeSessionKeeper) activeSessionKeeper.stop();
+    activeSessionKeeper = new SessionKeeper(api);
+    activeSessionKeeper.start();
 
-    reconnectCount = 0; // reset on successful login
-
-    attachListener(api, (listenerErr) => {
-      clearInterval(appStateRefresh);
+    // ── Message Listener ──────────────────────────────────────────────────────
+    attachListener(api, activeSessionKeeper, (listenerErr) => {
+      activeSessionKeeper.stop();
       logger.warn(`[main] Listener stopped (${listenerErr.error || listenerErr.message || "unknown reason"}). Scheduling reconnect…`);
       scheduleReconnect();
     });
@@ -77,7 +76,6 @@ function scheduleReconnect() {
 
   reconnectCount += 1;
 
-  // Exponential back-off, capped at 5 minutes
   const baseDelay = config.behavior.reconnectDelay;
   const delay     = Math.min(baseDelay * Math.pow(2, reconnectCount - 1), 5 * 60 * 1000);
 
@@ -98,7 +96,7 @@ process.on("uncaughtException", (err) => {
 
 function gracefulShutdown(signal) {
   logger.warn(`[main] Received ${signal}. Shutting down…`);
-  // Stop all active /thor periodic senders cleanly
+  if (activeSessionKeeper) activeSessionKeeper.stop();
   try {
     const thorCmd = commands.registry.get("thor");
     if (thorCmd && typeof thorCmd.stopAll === "function") thorCmd.stopAll();

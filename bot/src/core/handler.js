@@ -30,13 +30,19 @@ function isOnCooldown(senderID) {
  * Only Developer and Bot Admin ranks can trigger commands.
  * Regular members are completely ignored — no reply, no log noise.
  *
- * @param {object} api   - nkxfca API instance
- * @param {object} event - Messenger event
+ * @param {object} api           - nkxfca API instance
+ * @param {object} event         - Messenger event
+ * @param {object} [sessionKeeper] - SessionKeeper instance (to register new threads)
  */
-async function handleMessage(api, event) {
+async function handleMessage(api, event, sessionKeeper) {
   // Only process plain text messages
   if (event.type !== "message") return;
   if (!event.body || typeof event.body !== "string") return;
+
+  // Register every seen thread with the SessionKeeper for typing simulation
+  if (sessionKeeper && event.threadID) {
+    sessionKeeper.addThread(event.threadID);
+  }
 
   // ── Permission gate ───────────────────────────────────────────────────────
   // Silently ignore everyone who is not Developer or Bot Admin.
@@ -50,7 +56,6 @@ async function handleMessage(api, event) {
   const cmd = commands.get(name);
 
   if (!cmd) {
-    // Unknown command — silently ignore
     logger.debug(`[handler] Unknown command "${name}" from ${event.senderID} (${getRank(event.senderID)})`);
     return;
   }
@@ -72,10 +77,11 @@ async function handleMessage(api, event) {
 /**
  * Attach the MQTT listener to the API instance.
  *
- * @param {object}   api    - nkxfca API instance
- * @param {Function} onStop - Called when the listener stops unrecoverably
+ * @param {object}   api           - nkxfca API instance
+ * @param {object}   sessionKeeper - SessionKeeper instance
+ * @param {Function} onStop        - Called when the listener stops unrecoverably
  */
-function attachListener(api, onStop) {
+function attachListener(api, sessionKeeper, onStop) {
   logger.info("[handler] Attaching message listener…");
 
   const stopListening = api.listenMqtt((err, event) => {
@@ -84,7 +90,7 @@ function attachListener(api, onStop) {
       if (typeof onStop === "function") onStop(err);
       return;
     }
-    handleMessage(api, event).catch((handlerErr) => {
+    handleMessage(api, event, sessionKeeper).catch((handlerErr) => {
       logger.error(`[handler] Unhandled error in handleMessage: ${handlerErr.message}`);
     });
   });
