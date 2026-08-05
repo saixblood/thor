@@ -1,6 +1,6 @@
 # ⚡ Thor Bot
 
-A Facebook Messenger group bot powered by **nfxfca**.
+A Facebook Messenger group bot powered by **nkxfca** (`@neoaz07/nkxfca`).
 
 ---
 

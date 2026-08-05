@@ -2,7 +2,7 @@
 
 const fs     = require("fs");
 const path   = require("path");
-const login  = require("nfxfca");
+const login  = require("@neoaz07/nkxfca");
 const config = require("../../config.json");
 const logger = require("../utils/logger");
 
