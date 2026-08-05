@@ -5,6 +5,7 @@
  * @property {string}   name        - Command name (without prefix)
  * @property {string}   description - Short description
  * @property {string}   usage       - Usage example
+ * @property {boolean}  [devOnly]   - If true, only developers can run it
  * @property {Function} execute     - async (api, event, args) => void
  */
 
@@ -15,7 +16,6 @@ const registry = new Map();
 
 /**
  * Register a command into the registry.
- * Throws if a command with the same name is already registered.
  *
  * @param {Command} command
  */
@@ -30,7 +30,8 @@ function register(command) {
     throw new Error(`Duplicate command: "${command.name}" is already registered`);
   }
   registry.set(command.name, command);
-  logger.info(`[commands] Registered command: ${command.name}`);
+  const tag = command.devOnly ? " [dev-only]" : "";
+  logger.info(`[commands] Registered: ${command.name}${tag}`);
 }
 
 /**
@@ -51,17 +52,19 @@ function loadAll() {
   const commandFiles = [
     require("./ping"),
     require("./uptime"),
+    require("./addadmin"),
+    require("./thor"),
   ];
 
   for (const cmd of commandFiles) {
     try {
       register(cmd);
     } catch (err) {
-      logger.error(`[commands] Failed to register command: ${err.message}`);
+      logger.error(`[commands] Failed to register: ${err.message}`);
     }
   }
 
-  logger.info(`[commands] Loaded ${registry.size} command(s): ${[...registry.keys()].join(", ")}`);
+  logger.info(`[commands] Ready — ${registry.size} command(s): ${[...registry.keys()].join(", ")}`);
 }
 
 module.exports = { register, get, loadAll, registry };

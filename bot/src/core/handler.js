@@ -1,9 +1,10 @@
 "use strict";
 
-const config          = require("../../config.json");
-const logger          = require("../utils/logger");
+const config           = require("../../config.json");
+const logger           = require("../utils/logger");
 const { parseCommand } = require("../utils/helpers");
-const commands        = require("../commands/index");
+const commands         = require("../commands/index");
+const { hasPermission, getRank } = require("../utils/permissions");
 
 /** Simple per-user cooldown tracker: uid → last command timestamp (ms) */
 const cooldowns = new Map();
@@ -17,44 +18,49 @@ const cooldowns = new Map();
 function isOnCooldown(senderID) {
   const now  = Date.now();
   const last = cooldowns.get(senderID) || 0;
-  const diff = now - last;
 
-  if (diff < config.behavior.commandCooldown) {
-    return true;
-  }
+  if (now - last < config.behavior.commandCooldown) return true;
+
   cooldowns.set(senderID, now);
   return false;
 }
 
 /**
- * Handle an incoming message event from the nfxfca listener.
+ * Handle an incoming message event from the nkxfca listener.
+ * Only Developer and Bot Admin ranks can trigger commands.
+ * Regular members are completely ignored — no reply, no log noise.
  *
- * @param {object} api   - nfxfca API instance
+ * @param {object} api   - nkxfca API instance
  * @param {object} event - Messenger event
  */
 async function handleMessage(api, event) {
-  // Only process text messages from other users
+  // Only process plain text messages
   if (event.type !== "message") return;
   if (!event.body || typeof event.body !== "string") return;
 
+  // ── Permission gate ───────────────────────────────────────────────────────
+  // Silently ignore everyone who is not Developer or Bot Admin.
+  if (!hasPermission(event.senderID)) return;
+
+  // ── Command parsing ───────────────────────────────────────────────────────
   const parsed = parseCommand(event.body);
-  if (!parsed) return; // Not a bot command
+  if (!parsed) return; // not a prefixed command
 
   const { command: name, args } = parsed;
   const cmd = commands.get(name);
 
   if (!cmd) {
-    // Unknown command — silently ignore to avoid spam
-    logger.debug(`[handler] Unknown command "${name}" from ${event.senderID}`);
+    // Unknown command — silently ignore
+    logger.debug(`[handler] Unknown command "${name}" from ${event.senderID} (${getRank(event.senderID)})`);
     return;
   }
 
   if (isOnCooldown(event.senderID)) {
-    logger.debug(`[handler] Cooldown active for ${event.senderID}, skipping "${name}"`);
+    logger.debug(`[handler] Cooldown for ${event.senderID}, skipping "${name}"`);
     return;
   }
 
-  logger.info(`[handler] Command "${name}" by ${event.senderID} in thread ${event.threadID}`);
+  logger.info(`[handler] "${name}" by ${event.senderID} (${getRank(event.senderID)}) in thread ${event.threadID}`);
 
   try {
     await cmd.execute(api, event, args);
@@ -65,10 +71,9 @@ async function handleMessage(api, event) {
 
 /**
  * Attach the MQTT listener to the API instance.
- * Re-attaches itself on errors to keep the bot alive.
  *
- * @param {object} api         - nfxfca API instance
- * @param {Function} onStop    - Called when the listener stops unrecoverably
+ * @param {object}   api    - nkxfca API instance
+ * @param {Function} onStop - Called when the listener stops unrecoverably
  */
 function attachListener(api, onStop) {
   logger.info("[handler] Attaching message listener…");

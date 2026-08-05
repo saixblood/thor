@@ -10,14 +10,16 @@ const logger   = require("./src/utils/logger");
 const commands = require("./src/commands/index");
 const { authenticate, saveAppState } = require("./src/core/login");
 const { attachListener }             = require("./src/core/handler");
+const { listBotAdmins }              = require("./src/utils/permissions");
 
 // ─── Banner ───────────────────────────────────────────────────────────────────
 
 logger.bot("╔═══════════════════════════════════════╗");
 logger.bot(`║   ${config.bot.name.toUpperCase()} BOT  v${config.bot.version}                     ║`);
 logger.bot("╚═══════════════════════════════════════╝");
-logger.info(`Prefix   : ${config.bot.prefix}`);
-logger.info(`Language : ${config.bot.language}`);
+logger.info(`Prefix     : ${config.bot.prefix}`);
+logger.info(`Developers : ${config.ranks.developers.join(", ")}`);
+logger.info(`Bot Admins : ${listBotAdmins().length > 0 ? listBotAdmins().join(", ") : "(none)"}`);
 
 // ─── Command Registry ─────────────────────────────────────────────────────────
 
@@ -35,18 +37,17 @@ async function start() {
   try {
     const { api } = await authenticate();
 
-    // Periodically re-save the appstate to refresh session cookies
+    // Periodically re-save the appstate to keep the session fresh
     const appStateRefresh = setInterval(() => {
       if (api.getAppState) {
         saveAppState(api.getAppState());
         logger.debug("[main] Appstate refreshed.");
       }
-    }, 30 * 60 * 1000); // Every 30 minutes
+    }, 30 * 60 * 1000); // every 30 minutes
 
-    reconnectCount = 0; // Reset on successful login
+    reconnectCount = 0; // reset on successful login
 
     attachListener(api, (listenerErr) => {
-      // Listener stopped — clean up the refresh timer and try to reconnect
       clearInterval(appStateRefresh);
       logger.warn(`[main] Listener stopped (${listenerErr.error || listenerErr.message || "unknown reason"}). Scheduling reconnect…`);
       scheduleReconnect();
@@ -76,12 +77,11 @@ function scheduleReconnect() {
 
   reconnectCount += 1;
 
-  // Exponential back-off capped at 5 minutes
+  // Exponential back-off, capped at 5 minutes
   const baseDelay = config.behavior.reconnectDelay;
   const delay     = Math.min(baseDelay * Math.pow(2, reconnectCount - 1), 5 * 60 * 1000);
 
   logger.warn(`[main] Reconnect attempt ${reconnectCount}/${max} in ${Math.round(delay / 1000)}s…`);
-
   setTimeout(start, delay);
 }
 
@@ -93,19 +93,21 @@ process.on("unhandledRejection", (reason) => {
 
 process.on("uncaughtException", (err) => {
   logger.error(`[main] Uncaught Exception: ${err.message}`);
-  // Give logger time to flush before exiting
   setTimeout(() => process.exit(1), 500);
 });
 
-process.on("SIGINT", () => {
-  logger.warn("[main] Received SIGINT. Shutting down gracefully…");
+function gracefulShutdown(signal) {
+  logger.warn(`[main] Received ${signal}. Shutting down…`);
+  // Stop all active /thor periodic senders cleanly
+  try {
+    const thorCmd = commands.registry.get("thor");
+    if (thorCmd && typeof thorCmd.stopAll === "function") thorCmd.stopAll();
+  } catch (_) {}
   process.exit(0);
-});
+}
 
-process.on("SIGTERM", () => {
-  logger.warn("[main] Received SIGTERM. Shutting down gracefully…");
-  process.exit(0);
-});
+process.on("SIGINT",  () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 // ─── Launch ───────────────────────────────────────────────────────────────────
 

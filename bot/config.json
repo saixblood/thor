@@ -6,6 +6,11 @@
     "language": "en"
   },
 
+  "ranks": {
+    "developers": ["61592826269037"],
+    "adminFile": "./data/admins.json"
+  },
+
   "credentials": {
     "email": "",
     "password": "",
@@ -27,8 +32,7 @@
     "autoReconnect": true,
     "reconnectDelay": 5000,
     "maxReconnectAttempts": 10,
-    "commandCooldown": 1000,
-    "adminUIDs": []
+    "commandCooldown": 1000
   },
 
   "uptime": {
@@ -37,6 +41,6 @@
 
   "ping": {
     "message": "🏓 Pong! Bot is alive.",
-    "description": "Check if the bot is online"
+    "description": "Check if the bot is online and measure latency"
   }
 }
