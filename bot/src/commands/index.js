@@ -55,6 +55,7 @@ function loadAll() {
     require("./addadmin"),
     require("./thor"),
     require("./nm"),
+    require("./nick"),
   ];
 
   for (const cmd of commandFiles) {

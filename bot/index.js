@@ -105,6 +105,10 @@ function gracefulShutdown(signal) {
     const nmCmd = commands.registry.get("nm");
     if (nmCmd && typeof nmCmd.stopAll === "function") nmCmd.stopAll();
   } catch (_) {}
+  try {
+    const nickCmd = commands.registry.get("nick");
+    if (nickCmd && typeof nickCmd.stopAll === "function") nickCmd.stopAll();
+  } catch (_) {}
   process.exit(0);
 }
 
