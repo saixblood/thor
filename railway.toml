@@ -1,0 +1,11 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd bot && npm install"
+
+[deploy]
+startCommand = "cd bot && node index.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[environments.production]
+startCommand = "cd bot && node index.js"
