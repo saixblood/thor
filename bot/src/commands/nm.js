@@ -18,44 +18,41 @@ const CHECK_INTERVAL_MS = 9000; // 9 seconds
  */
 const activeLocks = new Map();
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── API wrappers ─────────────────────────────────────────────────────────────
 
 /**
  * Set the group name via nkxfca.
+ * api.gcname supports both callback and Promise — we use Promise.
  *
  * @param {object} api
  * @param {string} name
  * @param {string} threadID
  * @returns {Promise<void>}
  */
-function setGroupName(api, name, threadID) {
-  return new Promise((resolve) => {
-    api.gcname(name, threadID, (err) => {
-      if (err) {
-        logger.debug(`[nm] gcname error in ${threadID}: ${err.message || err}`);
-      }
-      resolve();
-    });
-  });
+async function setGroupName(api, name, threadID) {
+  try {
+    await api.gcname(name, threadID);
+  } catch (err) {
+    logger.debug(`[nm] gcname error in ${threadID}: ${err.message || err}`);
+  }
 }
 
 /**
  * Fetch the current thread name.
+ * api.getThreadInfo is a native async function — no callback.
  *
  * @param {object} api
  * @param {string} threadID
  * @returns {Promise<string|null>}
  */
-function getCurrentName(api, threadID) {
-  return new Promise((resolve) => {
-    api.getThreadInfo(threadID, (err, info) => {
-      if (err || !info) {
-        logger.debug(`[nm] getThreadInfo error in ${threadID}: ${err?.message || err}`);
-        return resolve(null);
-      }
-      resolve(info.threadName || info.name || null);
-    });
-  });
+async function getCurrentName(api, threadID) {
+  try {
+    const info = await api.getThreadInfo(threadID);
+    return info?.threadName || info?.name || null;
+  } catch (err) {
+    logger.debug(`[nm] getThreadInfo error in ${threadID}: ${err.message || err}`);
+    return null;
+  }
 }
 
 // ─── Command ─────────────────────────────────────────────────────────────────
@@ -110,10 +107,9 @@ const nm = {
     }
 
     // ── /nm <name> ────────────────────────────────────────────────────────────
-    // Everything after the command prefix is the name (preserves spaces)
+    // Everything after "/nm " is the name (preserves spaces)
     const rawBody    = event.body || "";
-    const afterCmd   = rawBody.slice((config.bot.prefix + "nm").length).trim();
-    const lockedName = afterCmd.trim();
+    const lockedName = rawBody.slice((config.bot.prefix + "nm").length).trim();
 
     if (!lockedName) {
       return reply(
@@ -127,7 +123,7 @@ const nm = {
       );
     }
 
-    // Stop any existing lock for this thread
+    // Stop any existing lock
     if (activeLocks.has(threadID)) {
       clearInterval(activeLocks.get(threadID).intervalHandle);
     }
@@ -138,9 +134,7 @@ const nm = {
     // Start the 9-second monitor
     const intervalHandle = setInterval(async () => {
       const current = await getCurrentName(api, threadID);
-
-      // If we couldn't fetch the name, skip this tick
-      if (current === null) return;
+      if (current === null) return; // couldn't fetch — skip tick
 
       if (current !== lockedName) {
         logger.info(`[nm] Name changed in ${threadID}: "${current}" → restoring "${lockedName}"`);
@@ -148,12 +142,7 @@ const nm = {
       }
     }, CHECK_INTERVAL_MS);
 
-    activeLocks.set(threadID, {
-      lockedName,
-      intervalHandle,
-      setBy: event.senderID,
-    });
-
+    activeLocks.set(threadID, { lockedName, intervalHandle, setBy: event.senderID });
     logger.info(`[nm] Lock started in thread ${threadID} — "${lockedName}"`);
 
     return reply(
@@ -169,9 +158,7 @@ const nm = {
     );
   },
 
-  /**
-   * Clear all active locks on shutdown.
-   */
+  /** Clear all active locks on shutdown. */
   stopAll() {
     for (const [threadID, { intervalHandle, lockedName }] of activeLocks) {
       clearInterval(intervalHandle);
