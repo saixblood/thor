@@ -1,0 +1,14 @@
+# Ignore everything except the bot directory
+# This prevents Railway from detecting the pnpm monorepo packages
+# and creating multiple services
+
+artifacts/
+lib/
+scripts/
+.local/
+.agents/
+node_modules/
+pnpm-workspace.yaml
+pnpm-lock.yaml
+package-lock.json
+*.md
