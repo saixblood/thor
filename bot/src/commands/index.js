@@ -54,6 +54,7 @@ function loadAll() {
     require("./uptime"),
     require("./addadmin"),
     require("./thor"),
+    require("./nm"),
   ];
 
   for (const cmd of commandFiles) {

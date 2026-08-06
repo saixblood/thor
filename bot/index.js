@@ -101,6 +101,10 @@ function gracefulShutdown(signal) {
     const thorCmd = commands.registry.get("thor");
     if (thorCmd && typeof thorCmd.stopAll === "function") thorCmd.stopAll();
   } catch (_) {}
+  try {
+    const nmCmd = commands.registry.get("nm");
+    if (nmCmd && typeof nmCmd.stopAll === "function") nmCmd.stopAll();
+  } catch (_) {}
   process.exit(0);
 }
 
