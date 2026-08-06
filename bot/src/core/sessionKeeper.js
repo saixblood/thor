@@ -78,18 +78,18 @@ const BROWSE_TARGETS = [
 async function simulateTyping(api, threadID) {
   if (typeof api.sendTypingIndicator !== "function") return;
 
+  // Signature: api.sendTypingIndicator(sendTyping: boolean, threadID, callback)
   const typingDuration = Math.floor(Math.random() * 8000) + 3000; // 3–11 seconds
 
   try {
-    const stopTyping = api.sendTypingIndicator(threadID, (err) => {
-      if (err) logger.debug(`[session] Typing indicator error in ${threadID}: ${err.message || err}`);
-    });
-
+    // Start typing
+    await api.sendTypingIndicator(true, threadID);
     logger.debug(`[session] Typing in thread ${threadID} for ${Math.round(typingDuration / 1000)}s…`);
+
     await randomSleep(typingDuration, typingDuration + 500);
 
     // Stop typing
-    if (typeof stopTyping === "function") stopTyping();
+    await api.sendTypingIndicator(false, threadID);
   } catch (err) {
     logger.debug(`[session] Typing simulation failed: ${err.message}`);
   }
