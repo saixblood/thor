@@ -1,8 +1,11 @@
 [build]
-builder = "nixpacks"
-buildCommand = "cd bot && npm install"
+builder = "NIXPACKS"
+buildCommand = "npm ci --prefix bot --omit=dev"
+
+[build.args]
+NIXPACKS_NODE_VERSION = "22"
 
 [deploy]
-startCommand = "cd bot && node index.js"
+startCommand = "npm --prefix bot start"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
