@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 buildCommand = "npm ci --omit=dev"
 
-[build.args]
+[variables]
 NIXPACKS_NODE_VERSION = "22"
 
 [deploy]

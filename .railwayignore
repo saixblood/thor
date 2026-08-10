@@ -1,6 +1,5 @@
-# Ignore everything except the bot directory
-# This prevents Railway from detecting the pnpm monorepo packages
-# and creating multiple services
+# Ignore unrelated workspace artifacts from the bot deployment.
+# Keep the root package manager files so Railway can install the bot workspace.
 
 artifacts/
 lib/
@@ -8,7 +7,4 @@ scripts/
 .local/
 .agents/
 node_modules/
-pnpm-workspace.yaml
-pnpm-lock.yaml
-package-lock.json
 *.md

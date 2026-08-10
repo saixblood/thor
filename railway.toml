@@ -1,11 +1,11 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci --prefix bot --omit=dev"
+buildCommand = "pnpm install --frozen-lockfile --filter thor-bot..."
 
-[build.args]
+[variables]
 NIXPACKS_NODE_VERSION = "22"
 
 [deploy]
-startCommand = "npm --prefix bot start"
+startCommand = "pnpm --filter thor-bot start"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

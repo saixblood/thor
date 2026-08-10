@@ -1,1 +1,2 @@
 - [nkxfca API reference](nkxfca-api.md) — verified function names & signatures; always check before building commands
+- [Railway bot deployment](railway-bot-deploy.md) — build the nested bot as a pnpm workspace with Node.js 22

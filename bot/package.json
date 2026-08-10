@@ -11,7 +11,7 @@
     "@neoaz07/nkxfca": "^1.0.10"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "license": "MIT"
 }
