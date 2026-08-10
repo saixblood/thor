@@ -50,6 +50,7 @@ function get(name) {
  */
 function loadAll() {
   const commandFiles = [
+    require("./help"),
     require("./ping"),
     require("./uptime"),
     require("./addadmin"),

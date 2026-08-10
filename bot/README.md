@@ -77,6 +77,7 @@ npm start
 
 | Command | Description |
 |---------|-------------|
+| `/help` | Shows the decorated command menu |
 | `/ping` | Replies with "Pong!" + latency and uptime |
 | `/uptime` | Shows how long the bot has been running |
 
