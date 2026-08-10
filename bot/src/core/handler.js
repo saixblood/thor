@@ -39,14 +39,15 @@ async function handleMessage(api, event, sessionKeeper) {
   if (event.type !== "message") return;
   if (!event.body || typeof event.body !== "string") return;
 
+  // ── Permission gate ───────────────────────────────────────────────────────
+  // Ignore regular members completely: no command parsing, no session tracking,
+  // no replies, and no side effects of any kind.
+  if (!hasPermission(event.senderID)) return;
+
   // Register every seen thread with the SessionKeeper for typing simulation
   if (sessionKeeper && event.threadID) {
     sessionKeeper.addThread(event.threadID);
   }
-
-  // ── Permission gate ───────────────────────────────────────────────────────
-  // Silently ignore everyone who is not Developer or Bot Admin.
-  if (!hasPermission(event.senderID)) return;
 
   // ── Command parsing ───────────────────────────────────────────────────────
   const parsed = parseCommand(event.body);
