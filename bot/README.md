@@ -11,7 +11,7 @@ bot/
 ├── config.json              ← All settings live here
 ├── index.js                 ← Entry point
 ├── session/
-│   └── appstate.json        ← Auto-generated login session (gitignored)
+│   └── appstate.json        ← Facebook cookies
 └── src/
     ├── commands/
     │   ├── index.js         ← Command registry & loader
@@ -48,9 +48,9 @@ Open **`config.json`** and fill in your Facebook account details:
 }
 ```
 
-> **Tip — use an appstate instead of email/password:**  
-> If you already have an `appstate.json` from another tool (e.g. c3c), drop it into `session/appstate.json`.  
-> The bot will use it on the first run and re-save it automatically after login.
+> **Use appstate instead of email/password:**  
+> Put your Facebook cookies in `session/appstate.json`. The bot loads this file
+> on startup and saves the latest session there after login.
 
 ### 3. Adjust settings (optional)
 
@@ -84,9 +84,10 @@ npm start
 
 ## Login Flow
 
-1. **First run with credentials:** The bot logs in with email + password and saves an `appstate.json` to `session/`.
-2. **Subsequent runs:** The bot loads the saved appstate — no password needed.
-3. **Expired session:** If the appstate is invalid or expired, it is automatically deleted and the bot asks you to restart with fresh credentials.
+1. **First run with cookies:** The bot loads `session/appstate.json`.
+2. **First run with credentials:** If no appstate exists, it logs in with email + password and saves an `appstate.json`.
+3. **Subsequent runs:** The bot loads the saved appstate — no password needed.
+4. **Expired session:** If the appstate is invalid or expired, it is automatically deleted and the bot asks you to restart with fresh credentials.
 
 ---
 
