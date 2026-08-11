@@ -1,7 +1,7 @@
 {
-  "name": "thor-bot",
+  "name": "hades-bot",
   "version": "1.0.0",
-  "description": "Thor - Facebook Messenger Group Bot powered by nfxfca",
+  "description": "Hades - Facebook Messenger Group Bot powered by nkxfca",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

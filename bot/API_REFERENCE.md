@@ -107,7 +107,7 @@ api.sendTypingIndicator(threadID, callback);
 ### `api.nickname(nickname, threadID, participantID, callback)` — NOT setNickname
 ```js
 // ✅ CORRECT
-await api.nickname("Thor", threadID, userID);
+await api.nickname("Hades", threadID, userID);
 
 // ❌ WRONG — function does not exist
 api.setNickname(...);

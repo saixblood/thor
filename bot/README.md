@@ -1,4 +1,4 @@
-# ⚡ Thor Bot
+# ⚡ Hades Bot
 
 A Facebook Messenger group bot powered by **nkxfca** (`@neoaz07/nkxfca`).
 
@@ -15,11 +15,12 @@ bot/
 └── src/
     ├── commands/
     │   ├── index.js         ← Command registry & loader
-    │   ├── ping.js          ← /ping command
-    │   └── apteem.js        ← /apteem command
+    │   ├── ping.js          ← /ping + uptime command
+    │   └── hades.js         ← /hades scheduler command
     ├── core/
     │   ├── login.js         ← Authentication & appstate management
-    │   └── handler.js       ← Message listener & command dispatcher
+    │   ├── handler.js       ← Message listener & command dispatcher
+    │   └── security.js      ← Validation, rate limits & execution guards
     └── utils/
         ├── logger.js        ← Coloured console logger
         └── helpers.js       ← parseCommand, reply, formatUptime
@@ -63,7 +64,9 @@ Open **`config.json`** and fill in your Facebook account details:
 | `behavior.autoReconnect` | Reconnect on disconnect |
 | `behavior.maxReconnectAttempts` | Max reconnect retries before exiting |
 | `behavior.commandCooldown` | Per-user cooldown between commands (ms) |
-| `behavior.adminUIDs` | Array of admin Facebook UIDs |
+| `security.maxMessageLength` | Maximum accepted message size |
+| `security.maxCommandsPerWindow` | Maximum commands per user/thread window |
+| `security.maxActiveSchedulers` | Maximum active `/hades` schedules |
 
 ### 4. Start the bot
 
@@ -79,7 +82,9 @@ npm start
 |---------|-------------|
 | `/help` | Shows the decorated command menu |
 | `/ping` | Replies with "Pong!" + latency and uptime |
-| `/uptime` | Shows how long the bot has been running |
+| `/hades <seconds> <message>` | Sends a protected periodic message |
+| `/hades stop` | Stops the periodic sender in the current group |
+| `/hades status` | Shows active periodic senders |
 
 ---
 

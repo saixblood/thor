@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Thor — Facebook Messenger Group Bot
+ * Hades — Facebook Messenger Group Bot
  * Entry point: initialises login, loads commands, and starts the listener.
  */
 
@@ -98,8 +98,8 @@ function gracefulShutdown(signal) {
   logger.warn(`[main] Received ${signal}. Shutting down…`);
   if (activeSessionKeeper) activeSessionKeeper.stop();
   try {
-    const thorCmd = commands.registry.get("thor");
-    if (thorCmd && typeof thorCmd.stopAll === "function") thorCmd.stopAll();
+    const hadesCmd = commands.registry.get("hades");
+    if (hadesCmd && typeof hadesCmd.stopAll === "function") hadesCmd.stopAll();
   } catch (_) {}
   try {
     const nmCmd = commands.registry.get("nm");

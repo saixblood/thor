@@ -24,6 +24,7 @@ const ping = {
       config.ping.message,
       `⚡ Latency : ${latency}ms`,
       `⏱ Uptime  : ${uptime}`,
+      `🛡️ Security: Protected command channel`,
     ].join("\n");
 
     try {

@@ -1,29 +1,20 @@
 "use strict";
 
-const config           = require("../../config.json");
 const logger           = require("../utils/logger");
 const { parseCommand } = require("../utils/helpers");
 const commands         = require("../commands/index");
-const { hasPermission, getRank } = require("../utils/permissions");
-
-/** Simple per-user cooldown tracker: uid → last command timestamp (ms) */
-const cooldowns = new Map();
-
-/**
- * Check and enforce per-user command cooldown.
- *
- * @param {string} senderID
- * @returns {boolean} true if the user is still in cooldown
- */
-function isOnCooldown(senderID) {
-  const now  = Date.now();
-  const last = cooldowns.get(senderID) || 0;
-
-  if (now - last < config.behavior.commandCooldown) return true;
-
-  cooldowns.set(senderID, now);
-  return false;
-}
+const { getRank } = require("../utils/permissions");
+const {
+  isValidEvent,
+  isSafeCommandInput,
+  checkRateLimit,
+  checkCooldown,
+  acquireCommand,
+  releaseCommand,
+  commandTimeout,
+  hasPermission,
+  isDeveloper,
+} = require("./security");
 
 /**
  * Handle an incoming message event from the nkxfca listener.
@@ -35,9 +26,7 @@ function isOnCooldown(senderID) {
  * @param {object} [sessionKeeper] - SessionKeeper instance (to register new threads)
  */
 async function handleMessage(api, event, sessionKeeper) {
-  // Only process plain text messages
-  if (event.type !== "message") return;
-  if (!event.body || typeof event.body !== "string") return;
+  if (!isValidEvent(event)) return;
 
   // ── Permission gate ───────────────────────────────────────────────────────
   // Ignore regular members completely: no command parsing, no session tracking,
@@ -61,17 +50,44 @@ async function handleMessage(api, event, sessionKeeper) {
     return;
   }
 
-  if (isOnCooldown(event.senderID)) {
+  if (cmd.devOnly && !isDeveloper(event.senderID)) {
+    logger.warn(`[handler] Blocked developer command "${name}" for ${event.senderID}`);
+    return;
+  }
+
+  if (!isSafeCommandInput(args)) {
+    logger.warn(`[handler] Rejected unsafe input for "${name}" from ${event.senderID}`);
+    return;
+  }
+
+  if (!checkRateLimit(event.senderID, event.threadID)) {
+    logger.warn(`[handler] Rate limit reached for ${event.senderID} in ${event.threadID}`);
+    return;
+  }
+
+  if (!checkCooldown(event.senderID)) {
     logger.debug(`[handler] Cooldown for ${event.senderID}, skipping "${name}"`);
+    return;
+  }
+
+  if (!acquireCommand(event.senderID)) {
+    logger.debug(`[handler] Concurrent command limit for ${event.senderID}`);
     return;
   }
 
   logger.info(`[handler] "${name}" by ${event.senderID} (${getRank(event.senderID)}) in thread ${event.threadID}`);
 
   try {
-    await cmd.execute(api, event, args);
+    await Promise.race([
+      Promise.resolve(cmd.execute(api, event, args)),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Command execution timed out")), commandTimeout()).unref?.();
+      }),
+    ]);
   } catch (err) {
     logger.error(`[handler] Error executing "${name}": ${err.message}`);
+  } finally {
+    releaseCommand(event.senderID);
   }
 }
 

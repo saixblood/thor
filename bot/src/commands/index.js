@@ -52,9 +52,8 @@ function loadAll() {
   const commandFiles = [
     require("./help"),
     require("./ping"),
-    require("./uptime"),
     require("./addadmin"),
-    require("./thor"),
+    require("./hades"),
     require("./nm"),
     require("./nick"),
   ];

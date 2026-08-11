@@ -47,7 +47,7 @@ const help = {
 
     const message = [
       "╔══════════════════════════════════╗",
-      `║      ⚡ ${config.bot.name.toUpperCase()} COMMANDS ⚡      ║`,
+       `║      ⚡ ${config.bot.name.toUpperCase()} COMMANDS ⚡      ║`,
       "╠══════════════════════════════════╣",
       "║   ✨ اختر أمرًا من القائمة أدناه   ║",
       "╚══════════════════════════════════╝",

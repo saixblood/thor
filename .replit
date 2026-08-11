@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "bash", "python-base-3.13"]
+modules = ["nodejs-22", "web", "bash", "python-base-3.13"]
 
 [deployment]
 router = "application"
@@ -18,10 +18,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Thor Bot"
+args = "Hades Bot"
 
 [[workflows.workflow]]
-name = "Thor Bot"
+name = "Hades Bot"
 author = "agent"
 
 [[workflows.workflow.tasks]]

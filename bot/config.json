@@ -1,6 +1,6 @@
 {
   "bot": {
-    "name": "thor",
+    "name": "Hades",
     "prefix": "/",
     "version": "1.0.0",
     "language": "en"
@@ -32,15 +32,23 @@
     "autoReconnect": true,
     "reconnectDelay": 5000,
     "maxReconnectAttempts": 10,
-    "commandCooldown": 1000
+    "commandCooldown": 1200
   },
 
-  "uptime": {
-    "description": "Shows how long the bot has been running"
+  "security": {
+    "maxMessageLength": 2000,
+    "maxArgs": 20,
+    "maxArgLength": 300,
+    "rateWindowMs": 10000,
+    "maxCommandsPerWindow": 5,
+    "maxConcurrentCommands": 1,
+    "commandExecutionTimeoutMs": 15000,
+    "maxActiveSchedulers": 20,
+    "maxScheduledMessageLength": 1000
   },
 
   "ping": {
-    "message": "🏓 Pong! Bot is alive.",
-    "description": "Check if the bot is online and measure latency"
+    "message": "🏓 Pong! Hades is alive.",
+    "description": "Check latency and show Hades uptime"
   }
 }

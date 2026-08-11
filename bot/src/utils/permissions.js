@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Rank / permission system for Thor Bot.
+ * Rank / permission system for Hades Bot.
  *
  * Ranks:
  *   Developer  – UIDs hardcoded in config.json > ranks.developers

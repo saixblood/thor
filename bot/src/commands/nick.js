@@ -184,7 +184,7 @@ const nick = {
         [
           `❌ No nickname provided.`,
           `Usage: ${config.bot.prefix}nick <nickname>`,
-          `Example: ${config.bot.prefix}nick ⚡ Thor Member`,
+          `Example: ${config.bot.prefix}nick ⚡ Hades Member`,
         ].join("\n"),
         threadID
       );
