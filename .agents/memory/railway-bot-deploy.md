@@ -5,6 +5,6 @@ description: Deployment constraint for the nested Hades Bot workspace on Railway
 
 The Railway service must build from the repository root while treating `bot` as a pnpm workspace package; otherwise Nixpacks can install the root packages but omit the bot's runtime dependency.
 
-**Why:** The bot entrypoint imports `@neoaz07/nkxfca`, which is declared by the nested package and requires Node.js 22 or newer.
+**Why:** The bot entrypoint imports `@neoaz07/nkxfca`, which is declared by the nested package and requires Node.js 22 or newer; nkxfca also loads `websocket-stream` and native `sqlite3` at runtime.
 
-**How to apply:** Keep the bot in `pnpm-workspace.yaml`, keep the root lockfile available to Railway, pin Node.js 22, and use a root `railway.toml` that builds the `hades-bot` filter and starts that workspace package.
+**How to apply:** Keep the bot in `pnpm-workspace.yaml`, keep the root lockfile available to Railway, pin Node.js 22, include `websocket-stream` in the bot dependencies, allow `sqlite3` in `onlyBuiltDependencies`, and use a root `railway.toml` that builds the `hades-bot` filter and starts that workspace package.

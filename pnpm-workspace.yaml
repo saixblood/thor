@@ -73,6 +73,7 @@ onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
   - msw
+  - sqlite3
   - unrs-resolver
 
 overrides:
