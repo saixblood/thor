@@ -44,7 +44,7 @@
     "maxConcurrentCommands": 1,
     "commandExecutionTimeoutMs": 15000,
     "maxActiveSchedulers": 20,
-    "maxScheduledMessageLength": 1000
+    "maxScheduledMessageLength": 2000
   },
 
   "ping": {

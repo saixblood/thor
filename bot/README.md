@@ -83,8 +83,21 @@ npm start
 | `/help` | Shows the decorated command menu |
 | `/ping` | Replies with "Pong!" + latency and uptime |
 | `/hades <seconds> <message>` | Sends a protected periodic message |
+| `/hades random <min> <max> seconds <message>` | Sends the message after a random delay between two second values |
+| `/hades random <min> <max> minutes <message>` | Sends the message after a random delay between two minute values |
 | `/hades stop` | Stops the periodic sender in the current group |
 | `/hades status` | Shows active periodic senders |
+
+Examples:
+
+```text
+/hades 30 Hello everyone!
+/hades random 1 5 minutes This message will be sent at a random time
+/hades random 10 30 seconds A random seconds interval
+```
+
+The scheduled message can be up to 2000 characters, matching the bot's incoming
+message limit. Random scheduling chooses a new delay after every message.
 
 ---
 

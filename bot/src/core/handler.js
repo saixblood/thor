@@ -55,7 +55,7 @@ async function handleMessage(api, event, sessionKeeper) {
     return;
   }
 
-  if (!isSafeCommandInput(args)) {
+  if (!isSafeCommandInput(args, name)) {
     logger.warn(`[handler] Rejected unsafe input for "${name}" from ${event.senderID}`);
     return;
   }

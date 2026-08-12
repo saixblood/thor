@@ -32,17 +32,20 @@ function isValidEvent(event) {
   return event.body.length <= securityLimits().maxMessageLength;
 }
 
-function isSafeArgument(value) {
+function isSafeArgument(value, maxLength = securityLimits().maxArgLength) {
   return typeof value === "string"
-    && value.length <= securityLimits().maxArgLength
+    && value.length <= maxLength
     && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value);
 }
 
-function isSafeCommandInput(args) {
+function isSafeCommandInput(args, commandName) {
   const limits = securityLimits();
+  const maxArgLength = commandName === "hades"
+    ? limits.maxMessageLength
+    : limits.maxArgLength;
   return Array.isArray(args)
     && args.length <= limits.maxArgs
-    && args.every(isSafeArgument);
+    && args.every((value) => isSafeArgument(value, maxArgLength));
 }
 
 function checkRateLimit(senderID, threadID) {
