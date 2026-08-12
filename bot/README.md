@@ -85,6 +85,7 @@ npm start
 | `/hades <seconds> <message>` | Sends a protected periodic message |
 | `/hades random <min> <max> seconds <message>` | Sends the message after a random delay between two second values |
 | `/hades random <min> <max> minutes <message>` | Sends the message after a random delay between two minute values |
+| `/hades r<number>s\|m <message>` | Shortcut for a random delay from 5 seconds up to the specified seconds/minutes |
 | `/hades stop` | Stops the periodic sender in the current group |
 | `/hades status` | Shows active periodic senders |
 
@@ -94,6 +95,7 @@ Examples:
 /hades 30 Hello everyone!
 /hades random 1 5 minutes This message will be sent at a random time
 /hades random 10 30 seconds A random seconds interval
+/hades r3m A random delay from 5 seconds up to 3 minutes
 ```
 
 Hades does not impose a character or word-count limit on the scheduled message.

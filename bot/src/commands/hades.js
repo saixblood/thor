@@ -3,6 +3,7 @@
 /**
  * /hades <seconds> <message with spaces>
  * /hades random <min> <max> <seconds|minutes> <message with spaces>
+ * /hades r<number>s|m <message with spaces>
  * /hades stop
  * /hades status
  */
@@ -39,6 +40,17 @@ function parseUnit(value) {
   if (["s", "sec", "secs", "second", "seconds"].includes(unit)) return "seconds";
   if (["m", "min", "mins", "minute", "minutes"].includes(unit)) return "minutes";
   return null;
+}
+
+function parseRandomShortcut(value) {
+  const match = /^r(\d+)(s|m)$/i.exec(String(value || ""));
+  if (!match) return null;
+
+  const maxValue = Number.parseInt(match[1], 10);
+  const unit = match[2].toLowerCase() === "m" ? "minutes" : "seconds";
+  const maxSeconds = unit === "minutes" ? maxValue * 60 : maxValue;
+
+  return { unit, maxValue, maxSeconds };
 }
 
 function formatDuration(seconds) {
@@ -93,6 +105,7 @@ const hades = {
     `${config.bot.prefix}hades <seconds> <message> — Start periodic sender`,
     `${config.bot.prefix}hades random <min> <max> seconds <message> — Random seconds`,
     `${config.bot.prefix}hades random <min> <max> minutes <message> — Random minutes`,
+    `${config.bot.prefix}hades r<number>s|m <message> — Random shortcut`,
     `${config.bot.prefix}hades stop — Stop periodic sender in this group`,
     `${config.bot.prefix}hades status — Show active senders`,
   ].join("\n"),
@@ -123,14 +136,23 @@ const hades = {
     const commandText = `${config.bot.prefix}hades`;
     const remainder = rawBody.slice(commandText.length).trim();
     const tokens = remainder.split(/\s+/);
-    const random = sub === "random";
-    const unit = random ? parseUnit(tokens[3]) : "seconds";
-    const minValue = random ? tokens[1] : tokens[0];
-    const maxValue = random ? tokens[2] : tokens[0];
+    const randomShortcut = parseRandomShortcut(tokens[0]);
+    const random = sub === "random" || Boolean(randomShortcut);
+    const unit = randomShortcut ? randomShortcut.unit : random ? parseUnit(tokens[3]) : "seconds";
+    const minValue = randomShortcut ? String(MIN_INTERVAL_SECONDS) : random ? tokens[1] : tokens[0];
+    const maxValue = randomShortcut ? String(randomShortcut.maxValue) : random ? tokens[2] : tokens[0];
     const minValueNumber = Number.parseInt(minValue, 10);
     const maxValueNumber = Number.parseInt(maxValue, 10);
-    const minSeconds = random && unit === "minutes" ? minValueNumber * 60 : minValueNumber;
-    const maxSeconds = random && unit === "minutes" ? maxValueNumber * 60 : maxValueNumber;
+    const minSeconds = randomShortcut
+      ? MIN_INTERVAL_SECONDS
+      : random && unit === "minutes"
+        ? minValueNumber * 60
+        : minValueNumber;
+    const maxSeconds = randomShortcut
+      ? randomShortcut.maxSeconds
+      : random && unit === "minutes"
+        ? maxValueNumber * 60
+        : maxValueNumber;
     const hasValidNumbers = /^\d+$/.test(minValue || "")
       && /^\d+$/.test(maxValue || "")
       && Number.isInteger(minSeconds)
@@ -152,13 +174,14 @@ const hades = {
           `Usage: ${config.bot.prefix}hades 30 Hello everyone!`,
           `       ${config.bot.prefix}hades random 1 5 minutes Hello everyone!`,
           `       ${config.bot.prefix}hades random 10 30 seconds Hello everyone!`,
+          `       ${config.bot.prefix}hades r3m Hello everyone!`,
           `       ${config.bot.prefix}hades stop`,
         ].join("\n"),
         threadID
       );
     }
 
-    const argumentCount = random ? 4 : 1;
+    const argumentCount = randomShortcut ? 1 : random ? 4 : 1;
     const message = safeMessage(tokens.slice(argumentCount).join(" "));
 
     if (!message) {
