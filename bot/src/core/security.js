@@ -14,7 +14,6 @@ function valueOrDefault(value, fallback) {
 
 function securityLimits() {
   return {
-    maxMessageLength: valueOrDefault(securityConfig.maxMessageLength, 2000),
     maxArgs: valueOrDefault(securityConfig.maxArgs, 20),
     maxArgLength: valueOrDefault(securityConfig.maxArgLength, 300),
     rateWindowMs: valueOrDefault(securityConfig.rateWindowMs, 10000),
@@ -29,7 +28,7 @@ function isValidEvent(event) {
   if (typeof event.senderID !== "string" || !/^\d+$/.test(event.senderID)) return false;
   if (typeof event.threadID !== "string" || event.threadID.length === 0) return false;
   if (typeof event.body !== "string" || event.body.length === 0) return false;
-  return event.body.length <= securityLimits().maxMessageLength;
+  return true;
 }
 
 function isSafeArgument(value, maxLength = securityLimits().maxArgLength) {
@@ -40,12 +39,13 @@ function isSafeArgument(value, maxLength = securityLimits().maxArgLength) {
 
 function isSafeCommandInput(args, commandName) {
   const limits = securityLimits();
-  const maxArgLength = commandName === "hades"
-    ? limits.maxMessageLength
-    : limits.maxArgLength;
+  if (commandName === "hades") {
+    return Array.isArray(args) && args.every((value) => isSafeArgument(value, Infinity));
+  }
+
   return Array.isArray(args)
     && args.length <= limits.maxArgs
-    && args.every((value) => isSafeArgument(value, maxArgLength));
+    && args.every((value) => isSafeArgument(value, limits.maxArgLength));
 }
 
 function checkRateLimit(senderID, threadID) {

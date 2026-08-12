@@ -15,11 +15,6 @@ const activeSenders = new Map();
 const security = config.security || {};
 const MIN_INTERVAL_SECONDS = 5;
 const MAX_INTERVAL_SECONDS = 86400;
-const MAX_SCHEDULED_MESSAGE_LENGTH = Number.isFinite(security.maxScheduledMessageLength)
-  ? security.maxScheduledMessageLength
-  : Number.isFinite(security.maxMessageLength)
-    ? security.maxMessageLength
-    : 2000;
 const MAX_ACTIVE_SCHEDULERS = Number.isFinite(security.maxActiveSchedulers)
   ? security.maxActiveSchedulers
   : 20;
@@ -27,6 +22,7 @@ const MAX_ACTIVE_SCHEDULERS = Number.isFinite(security.maxActiveSchedulers)
 function clearSender(threadID) {
   const sender = activeSenders.get(threadID);
   if (!sender) return false;
+  clearInterval(sender.intervalHandle);
   clearTimeout(sender.timeoutHandle);
   activeSenders.delete(threadID);
   return true;
@@ -57,35 +53,37 @@ function pickRandomSeconds(minSeconds, maxSeconds) {
   return Math.floor(Math.random() * (maxSeconds - minSeconds + 1)) + minSeconds;
 }
 
+function sendScheduledMessage(api, threadID, sender) {
+  if (activeSenders.get(threadID) !== sender) return;
+
+  try {
+    api.sendMessage(sender.message, threadID, (err) => {
+      if (err) {
+        logger.error(`[hades] Failed to send periodic message to ${threadID}: ${err.error || err.message}`);
+        if (err.error === 1545012 || err.error === "1545012") {
+          clearSender(threadID);
+          logger.warn(`[hades] Auto-stopped sender for thread ${threadID}.`);
+          return;
+        }
+      }
+
+      if (sender.random) scheduleNext(api, threadID, sender);
+    });
+  } catch (err) {
+    logger.error(`[hades] Periodic send failed: ${err.message}`);
+    clearSender(threadID);
+  }
+}
+
 function scheduleNext(api, threadID, sender) {
   if (activeSenders.get(threadID) !== sender) return;
 
-  const delaySeconds = sender.random
-    ? pickRandomSeconds(sender.minSeconds, sender.maxSeconds)
-    : sender.seconds;
-
+  const delaySeconds = pickRandomSeconds(sender.minSeconds, sender.maxSeconds);
   sender.nextDelaySeconds = delaySeconds;
-  sender.timeoutHandle = setTimeout(() => {
-    if (activeSenders.get(threadID) !== sender) return;
-
-    try {
-      api.sendMessage(sender.message, threadID, (err) => {
-        if (err) {
-          logger.error(`[hades] Failed to send periodic message to ${threadID}: ${err.error || err.message}`);
-          if (err.error === 1545012 || err.error === "1545012") {
-            clearSender(threadID);
-            logger.warn(`[hades] Auto-stopped sender for thread ${threadID}.`);
-            return;
-          }
-        }
-
-        scheduleNext(api, threadID, sender);
-      });
-    } catch (err) {
-      logger.error(`[hades] Periodic send failed: ${err.message}`);
-      clearSender(threadID);
-    }
-  }, delaySeconds * 1000);
+  sender.timeoutHandle = setTimeout(
+    () => sendScheduledMessage(api, threadID, sender),
+    delaySeconds * 1000
+  );
 }
 
 const hades = {
@@ -172,14 +170,12 @@ const hades = {
         threadID
       );
     }
-    if (message.length > MAX_SCHEDULED_MESSAGE_LENGTH) {
-      return reply(api, `❌ Message is too long. Maximum: ${MAX_SCHEDULED_MESSAGE_LENGTH} characters.`, threadID);
-    }
     if (!activeSenders.has(threadID) && activeSenders.size >= MAX_ACTIVE_SCHEDULERS) {
       return reply(api, "🛡️ Scheduler limit reached. Stop an existing sender first.", threadID);
     }
 
     clearSender(threadID);
+    const messagePreview = message.length > 200 ? `${message.slice(0, 200)}…` : message;
     await reply(
       api,
       [
@@ -187,7 +183,7 @@ const hades = {
         random
           ? `⏱ Interval : random between ${formatDuration(minSeconds)} and ${formatDuration(maxSeconds)}`
           : `⏱ Interval : every ${formatDuration(minSeconds)}`,
-        `💬 Message  : ${message}`,
+        `💬 Message  : ${messagePreview}`,
         "",
         `Use \`${config.bot.prefix}hades stop\` to stop.`,
       ].join("\n"),
@@ -207,7 +203,14 @@ const hades = {
       startedBy: event.senderID,
     };
     activeSenders.set(threadID, sender);
-    scheduleNext(api, threadID, sender);
+    if (random) {
+      scheduleNext(api, threadID, sender);
+    } else {
+      sender.intervalHandle = setInterval(
+        () => sendScheduledMessage(api, threadID, sender),
+        minSeconds * 1000
+      );
+    }
     logger.info(`[hades] Started sender in thread ${threadID} — ${sender.scheduleLabel}`);
   },
 

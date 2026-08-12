@@ -36,15 +36,13 @@
   },
 
   "security": {
-    "maxMessageLength": 2000,
     "maxArgs": 20,
     "maxArgLength": 300,
     "rateWindowMs": 10000,
     "maxCommandsPerWindow": 5,
     "maxConcurrentCommands": 1,
     "commandExecutionTimeoutMs": 15000,
-    "maxActiveSchedulers": 20,
-    "maxScheduledMessageLength": 2000
+    "maxActiveSchedulers": 20
   },
 
   "ping": {

@@ -96,8 +96,9 @@ Examples:
 /hades random 10 30 seconds A random seconds interval
 ```
 
-The scheduled message can be up to 2000 characters, matching the bot's incoming
-message limit. Random scheduling chooses a new delay after every message.
+Hades does not impose a character or word-count limit on the scheduled message.
+Random scheduling chooses a new delay after every message, while the normal
+seconds form keeps using the same fixed interval on every send.
 
 ---
 
